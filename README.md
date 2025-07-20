@@ -1,2 +1,2 @@
 # ImageStitiching
-Image stitching on images using bundle adjustment
+Image stitching on images using bundle adjustment. 
