@@ -37,6 +37,8 @@ from pickle      import dump, load
 # USER INTERFACE
 percentage = 0.6
 
+# Constants
+FLANN_INDEX_KDTREE = 0
 
 
 class Matcher:
@@ -51,16 +53,20 @@ class Matcher:
     @property
     def matches(self):
         return self._matches
-
+    #
 
     def get_matches(self):
         '''
         Gets the pairwise matches between two images
         '''
-        bf = cv.BFMatcher()
+        index_params  = dict(algorithm = FLANN_INDEX_KDTREE, trees = 5)
+        search_params = dict(checks = 50)
+        flann_matcher = cv.FlannBasedMatcher(index_params, search_params)
 
         # Find good matches
-        save_matches = dict()
+        save_img_pairs = dict()
+        pairs          = []
+        pairs_matches  = []
 
         # Get the keypoints and descriptors of the images
         for img in self._imgs:
@@ -69,21 +75,42 @@ class Matcher:
         # for 
 
         # Match the descriptors for the image/images in pairs
-        for id_img in combinations((self._imgs),2):
-            print(f"Matches between {list(id_img[0].filedescptn.keys())[0]} and {list(id_img[1].filedescptn.keys())[0]}", flush=True)
+        for id_img in range(0, len(self._imgs)):
+            flann_matcher.clear()
 
-            matches = bf.knnMatch(id_img[0].descptr, 
-                                  id_img[1].descptr, 
-                                  k=2)
+            # Get the train and query descriptors
+            # The flann_train_descptr holds all the descriptors except the one being queried
+            # The flann_query_descptr holds the descriptors of the image being queried
+            flann_train_descptr = [x for j,x in enumerate(self.all_descptrs) if j != id_img]
+            flann_query_descptr = self.all_descptrs[id_img]
+            matching_pairs      = [j for j, x in enumerate(self.all_descptrs) if j != id_img]
+            matching_pairs.append(id_img); pairs.append(matching_pairs)
 
-            # Get the good matches
-            good_matches = array([[m] for m,n in matches if m.distance < percentage*n.distance])
+            # Train the descriptos
+            flann_matcher.add(flann_train_descptr)
+            flann_matcher.train()
 
-            # Save the matches
-            save_matches[f"({list(id_img[0].filedescptn.values())[0]},{list(id_img[1].filedescptn.values())[0]})"] = good_matches
+            # Get the matches
+            matches = flann_matcher.knnMatch(flann_query_descptr, k=4)
+
+            # Savee the potential pairs
+            potential_pairs = zeros((len(self._imgs),len(flann_query_descptr)), dtype=int)
+
+            # Get the query idx from the image being queried
+            for idx, pt_neigbors in enumerate(matches):
+                for pt_idx in reversed(pt_neigbors):
+                    get_query_img_idx = pt_idx.imgIdx if pt_idx.imgIdx < id_img else pt_idx.imgIdx + 1
+                    potential_pairs[get_query_img_idx][idx] = pt_idx.trainIdx
+                # for
+            # for
+
+            pairs_matches.append(potential_pairs)
+            
+            # Save the pairs
+            save_img_pairs[tuple(matching_pairs)] = pairs_matches
             # save_matches.append(good_matches)
         # for
-        return save_matches
+        return save_img_pairs
     #
            
 
@@ -104,32 +131,39 @@ class Matcher:
         goodmatches = []
 
         # Initialize the matcher
-        for match_key, match_value in matches.items():
-            ptA = zeros((len(match_value),2), dtype=float32)
-            ptB = zeros((len(match_value),2), dtype=float32)
+        for queryIdx, (pairIdx, potential_pairs) in enumerate(matches.items()):
+            for targetIdx in pairIdx[:-1]:
 
-            # Get the key numbers for the keyoints
-            queryImg_num  = literal_eval(match_key)[0]
-            targetImg_num = literal_eval(match_key)[1]
+                # Lets track the query image and the target image
+                query_to_target_imgs = [(match.cam_from.image.filename, match.cam_to.image.filename) for match in goodmatches]
+                query_img            = self._imgs[queryIdx].filename
+                target_img           = self._imgs[targetIdx].filename
 
-            for i, match_id in enumerate(match_value):
-                ptA[i,:] = self.all_keypts[queryImg_num][match_id[0].queryIdx].pt
-                ptB[i,:] = self.all_keypts[targetImg_num][match_id[0].trainIdx].pt
+                if ((query_img, target_img) in query_to_target_imgs or (target_img, query_img) in query_to_target_imgs):
+                    continue
+                # if
+
+                ptA = take(self.all_keypts[queryIdx], nonzero(potential_pairs[queryIdx][targetIdx])[0]).tolist()
+                ptB = take(self.all_keypts[targetIdx], potential_pairs[queryIdx][targetIdx][nonzero(potential_pairs[queryIdx][targetIdx])]).tolist()
+
+                kptA = array([x.pt for x in ptA], dtype=float32)
+                kptB = array([x.pt for x in ptB], dtype=float32)
+
+                # Get the homography matrix
+                H, bestInliers = use_ransac(kptA, kptB, 500, 4)
+
+                for i in range(len(bestInliers)):
+                    bestInliers[i][0], bestInliers[i][1] = bestInliers[i][1], bestInliers[i][0]
+                # for
+                
+                goodmatches.append(Match(self._cameras[queryIdx], self._cameras[targetIdx], H, bestInliers))
             # for
-
-            # Get the homography matrix
-            H, bestInliers = use_ransac(ptA, ptB, 1000, 4)
-
-            goodmatches.append(Match(self._cameras[queryImg_num], self._cameras[targetImg_num], H, bestInliers))
-
-            # Save the matches to an attribute
-            self._matches = goodmatches
-
+        # for
         return goodmatches
     #
 
     def run_matcher(self):
-        if path.isfile("pairwise_matches.pckl"):
+        if path.isfile("pair_wise_matches.pckl"):
             try:
                 with open(f"pairwise_matches.pckl", "rb") as read_matches:
                     pariwise_matches = load(read_matches)
@@ -147,9 +181,12 @@ class Matcher:
             #     dump(pariwise_matches, f)
             # # with
         # try
+        self._matches = pariwise_matches
+
         return pariwise_matches
     #
             
+
 
 
 
