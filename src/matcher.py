@@ -29,7 +29,7 @@ import cv2       as cv
 from camera      import Camera
 from homo_ransac import use_ransac
 from itertools   import combinations
-from numpy       import array, zeros, float32
+from numpy       import array, zeros, float32, empty
 from match       import Match
 from os          import path
 from pickle      import dump, load
@@ -93,7 +93,8 @@ class Matcher:
             matches = flann_matcher.knnMatch(flann_query_descptr, k=4)
 
             # Savee the potential pairs
-            potential_pairs = zeros((len(self._imgs),len(flann_query_descptr)), dtype=int)
+            potential_pairs = empty((len(self._imgs),len(flann_query_descptr)), dtype=int) # using zeros reduced the number of potential pairs
+            potential_pairs.fill(-1) 
 
             # Get the query idx from the image being queried
             for idx, pt_neigbors in enumerate(matches):
@@ -190,5 +191,6 @@ class Matcher:
 
 
     
+
 
 
