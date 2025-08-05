@@ -3,8 +3,6 @@ Image stitching using bundle adjustment.
 
 The ransac, homography and bundle adjustment was done from scratch. I wanted to understand the process. 
 
-Result:
+The resulting file is huge, see the result folder.
 
-https://github.com/Iphykay/ImageStitiching/blob/main/result/stitched_img.png
-
-
+Unfinished, changing some calibrations
