@@ -66,7 +66,6 @@ class Matcher:
         # Find good matches
         save_img_pairs = dict()
         pairs          = []
-        pairs_matches  = []
 
         # Get the keypoints and descriptors of the images
         for img in self._imgs:
@@ -103,11 +102,9 @@ class Matcher:
                     potential_pairs[get_query_img_idx][idx] = pt_idx.trainIdx
                 # for
             # for
-
-            pairs_matches.append(potential_pairs)
             
             # Save the pairs
-            save_img_pairs[tuple(matching_pairs)] = pairs_matches
+            save_img_pairs[tuple(matching_pairs)] = potential_pairs
             # save_matches.append(good_matches)
         # for
         return save_img_pairs
@@ -193,3 +190,4 @@ class Matcher:
 
 
     
+
