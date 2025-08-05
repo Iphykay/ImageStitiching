@@ -5,6 +5,6 @@ The ransac, homography and bundle adjustment was done from scratch. I wanted to 
 
 Result:
 
-
+https://github.com/Iphykay/ImageStitiching/blob/main/result/stitched_img.png
 
 
