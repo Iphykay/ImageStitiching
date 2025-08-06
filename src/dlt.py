@@ -25,7 +25,7 @@ ToDo:
 # OTHER IMPORTS
 
 # CUSTOM IMPORTS
-from numpy import array, nan, empty, mean, sum, power, sqrt, vstack, ones, linalg
+from numpy import array, nan, empty, mean, sum, power, sqrt, vstack, ones, linalg, asarray
 
 
 def compute_A_matrix(pt1, pt2):
@@ -43,20 +43,20 @@ def compute_A_matrix(pt1, pt2):
     A: 2n x 9 matrix 
     """
 
-    A    = empty((2*len(pt1),9))
-    A[:] = nan
+    A = []
 
-    for idx_c in range(0, len(pt1)):
-        x, y             = pt1[idx_c]
-        x_prime, y_prime = pt2[idx_c]
+    for i in range (0, len(pt1)):
+        x, y             = pt1[i]
+        x_prime, y_prime = pt2[i]
 
-        A[idx_c:]   = [0, 0, 0, -x, -y, -1, y_prime*x, y_prime*y, y_prime]
-        A[idx_c+1:] = [x, y, 1, 0, 0, 0, -x_prime*x, -x_prime*y, -x_prime]
+        A.append([0, 0, 0, -x, -y, -1, y_prime * x, y_prime * y, y_prime])
+        A.append([x, y, 1, 0, 0, 0, -x_prime * x, -x_prime * y, -x_prime])
+    # for
     
-    return A
+    return asarray(A)
 #
 
-def normalize_points(pts):
+def normalize_point(pts):
     """
     Normalizes the points
 
@@ -103,8 +103,8 @@ def use_dlt(pts1, pts2):
     """
 
     # Use the nomralize function
-    pt1_norm, pt1_pm = normalize_points(pts1)
-    pt2_norm, pt2_pm = normalize_points(pts2)
+    pt1_norm, pt1_pm = normalize_point(pts1)
+    pt2_norm, pt2_pm = normalize_point(pts2)
 
     # compute the A matrix
     A_matrix = compute_A_matrix(pt1_norm, pt2_norm)
@@ -122,6 +122,7 @@ def use_dlt(pts1, pts2):
     H = linalg.inv(pt2_pm) @ H @ pt1_pm
 
     return H
+
 
 
 
