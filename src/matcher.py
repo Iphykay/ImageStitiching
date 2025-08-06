@@ -157,6 +157,10 @@ class Matcher:
                 goodmatches.append(Match(self._cameras[queryIdx], self._cameras[targetIdx], H, bestInliers))
             # for
         # for
+
+        # Sort by number of inliers in descending order
+        goodmatches.sort(reverse=True, key=lambda match: len(match.inliers))
+        
         return goodmatches
     #
 
@@ -191,6 +195,7 @@ class Matcher:
 
 
     
+
 
 
 
