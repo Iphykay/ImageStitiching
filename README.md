@@ -1,7 +1,7 @@
 # ImageStitiching
 Combines multiple overlapping images into one seamless panoramic image.
 
-This project uses the bundle adhjustment to refine the extrinisic and intrinisic parameters 
+This project uses the bundle adjustment to refine the extrinisic and intrinisic parameters 
 of the camera. 
 
 The bundle adjustment was done from scrtatch to understand the process. 
