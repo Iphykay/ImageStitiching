@@ -10,7 +10,7 @@ Authors:
     Iphy Kelvin
 
 Date Created     : 05/20/2025
-Date Last Updated: 06/20/2025
+Date Last Updated: 08/06/2025
 
 Doc:
     <***>
@@ -112,5 +112,6 @@ def use_ransac(pts1, pts2, max_iterations, threshold):
     # for
 
     return best_h, bestinliers
+
 
 
