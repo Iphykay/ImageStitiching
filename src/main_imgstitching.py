@@ -10,7 +10,7 @@ Authors:
     Iphy Kelvin
 
 Date Created     : 05/20/2025
-Date Last Updated: 07/20/2025
+Date Last Updated: 08/07/2025
 
 Doc:
     <***>
@@ -66,15 +66,15 @@ def main():
 
     # Get camera estimates
     cameraEsts = cam_est(getKeypt_matches)
+    estimated_cams = cameraEsts._estimation()
 
     # Stitch the images
-    stitch = Stitch(cameraEsts)
+    stitch = Stitch(estimated_cams)
     stitch.run()
 
     cv.imshow('Result', stitch.stitched_img)
     cv.imwrite('./stitched_img.png', stitch.stitched_img) 
     cv.waitKey(0)
-
 #
 
 
@@ -82,6 +82,7 @@ def main():
 
 if __name__ == '__main__':
     main()
+
 
 
 
